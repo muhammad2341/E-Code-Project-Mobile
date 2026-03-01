@@ -1,10 +1,9 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'edit_post_page.dart';
 import '../services/auth_service.dart';
 import 'detail_page.dart';
+import 'search_page.dart';
 import 'package:http/http.dart' as http;
 
 class HomePage extends StatefulWidget {
@@ -19,11 +18,7 @@ class _HomePageState extends State<HomePage> {
   bool isLoadingPosts = false;
   bool hasMore = true;
   final ScrollController _scrollController = ScrollController();
-  final TextEditingController _searchController = TextEditingController();
-  Timer? _searchDebounce;
   bool isFabPressed = false;
-  bool isSearchOpen = false;
-  String _searchQuery = '';
 
   int limit = 10;
   int skip = 0;
@@ -46,8 +41,6 @@ class _HomePageState extends State<HomePage> {
   @override
   void dispose() {
     _scrollController.dispose();
-    _searchController.dispose();
-    _searchDebounce?.cancel();
     super.dispose();
   }
 
@@ -71,21 +64,7 @@ class _HomePageState extends State<HomePage> {
     }
 
     try {
-      const String selectFields = 'title,reactions,userId';
-      final bool isSearching = _searchQuery.trim().isNotEmpty;
-
-      final response = isSearching
-          ? await AuthService.searchPosts(
-              query: _searchQuery.trim(),
-              limit: limit,
-              skip: skip,
-              select: selectFields,
-            )
-          : await AuthService.getPosts(
-              limit: limit,
-              skip: skip,
-              select: selectFields,
-            );
+      final response = await AuthService.getPosts(limit: limit, skip: skip);
 
       if (response.statusCode == 200) {
         List newPosts = response.data["posts"] ?? [];
@@ -122,27 +101,6 @@ class _HomePageState extends State<HomePage> {
     } catch (e) {
       setState(() => isLoadingPosts = false);
     }
-  }
-
-  void onSearchChanged(String value) {
-    setState(() {});
-    _searchDebounce?.cancel();
-    _searchDebounce = Timer(const Duration(milliseconds: 450), () {
-      if (!mounted) return;
-      setState(() {
-        _searchQuery = value.trim();
-      });
-      loadPosts(isRefresh: true);
-    });
-  }
-
-  void clearSearch() {
-    _searchDebounce?.cancel();
-    _searchController.clear();
-    setState(() {
-      _searchQuery = '';
-    });
-    loadPosts(isRefresh: true);
   }
 
   Future<void> deletePost(int id, int index) async {
@@ -272,69 +230,28 @@ class _HomePageState extends State<HomePage> {
         actions: [
           Padding(
             padding: const EdgeInsets.only(right: 8),
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 180),
-              width: isSearchOpen ? 165 : 40,
-              height: 36,
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(18),
-                border: Border.all(color: const Color(0xFFDFE0E0), width: 1),
-              ),
-              child: Row(
-                children: [
-                  GestureDetector(
-                    onTap: () {
-                      setState(() {
-                        if (isSearchOpen && _searchController.text.isEmpty) {
-                          isSearchOpen = false;
-                          _searchQuery = '';
-                          loadPosts(isRefresh: true);
-                        } else {
-                          isSearchOpen = true;
-                        }
-                      });
-                    },
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 9),
-                      child: SvgPicture.asset(
-                        "assets/icons/search.svg",
-                        width: 18,
-                        height: 18,
-                      ),
-                    ),
+            child: GestureDetector(
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const SearchPage()),
+                );
+              },
+              child: Container(
+                width: 40,
+                height: 36,
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(18),
+                  border: Border.all(color: const Color(0xFFDFE0E0), width: 1),
+                ),
+                child: Center(
+                  child: SvgPicture.asset(
+                    "assets/icons/search.svg",
+                    width: 18,
+                    height: 18,
                   ),
-                  if (isSearchOpen)
-                    Expanded(
-                      child: TextField(
-                        controller: _searchController,
-                        onChanged: onSearchChanged,
-                        style: const TextStyle(fontSize: 13),
-                        decoration: InputDecoration(
-                          hintText: 'Cari... ',
-                          hintStyle: const TextStyle(
-                            fontSize: 13,
-                            color: Colors.grey,
-                          ),
-                          border: InputBorder.none,
-                          isDense: true,
-                          contentPadding: const EdgeInsets.only(right: 4),
-                          suffixIcon: _searchController.text.isNotEmpty
-                              ? IconButton(
-                                  padding: EdgeInsets.zero,
-                                  constraints: const BoxConstraints(),
-                                  onPressed: clearSearch,
-                                  icon: const Icon(
-                                    Icons.close,
-                                    size: 14,
-                                    color: Colors.grey,
-                                  ),
-                                )
-                              : null,
-                        ),
-                      ),
-                    ),
-                ],
+                ),
               ),
             ),
           ),
