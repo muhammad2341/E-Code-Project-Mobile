@@ -41,10 +41,33 @@ class AuthService {
   static Future<Response> getPosts({
     required int limit,
     required int skip,
+    String? select,
   }) async {
     return await dio.get(
       'https://dummyjson.com/posts',
-      queryParameters: {'limit': limit, 'skip': skip},
+      queryParameters: {
+        'limit': limit,
+        'skip': skip,
+        if (select != null && select.isNotEmpty) 'select': select,
+      },
+    );
+  }
+
+  // ================= SEARCH POSTS =================
+  static Future<Response> searchPosts({
+    required String query,
+    required int limit,
+    required int skip,
+    String? select,
+  }) async {
+    return await dio.get(
+      'https://dummyjson.com/posts/search',
+      queryParameters: {
+        'q': query,
+        'limit': limit,
+        'skip': skip,
+        if (select != null && select.isNotEmpty) 'select': select,
+      },
     );
   }
 

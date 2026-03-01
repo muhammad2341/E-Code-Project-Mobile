@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'edit_post_page.dart';
@@ -17,7 +19,11 @@ class _HomePageState extends State<HomePage> {
   bool isLoadingPosts = false;
   bool hasMore = true;
   final ScrollController _scrollController = ScrollController();
+  final TextEditingController _searchController = TextEditingController();
+  Timer? _searchDebounce;
   bool isFabPressed = false;
+  bool isSearchOpen = false;
+  String _searchQuery = '';
 
   int limit = 10;
   int skip = 0;
@@ -35,6 +41,14 @@ class _HomePageState extends State<HomePage> {
         loadPosts();
       }
     });
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    _searchController.dispose();
+    _searchDebounce?.cancel();
+    super.dispose();
   }
 
   void sortPostsByMeFirst() {
@@ -57,19 +71,48 @@ class _HomePageState extends State<HomePage> {
     }
 
     try {
-      final response = await AuthService.getPosts(limit: limit, skip: skip);
+      const String selectFields = 'title,reactions,userId';
+      final bool isSearching = _searchQuery.trim().isNotEmpty;
+
+      final response = isSearching
+          ? await AuthService.searchPosts(
+              query: _searchQuery.trim(),
+              limit: limit,
+              skip: skip,
+              select: selectFields,
+            )
+          : await AuthService.getPosts(
+              limit: limit,
+              skip: skip,
+              select: selectFields,
+            );
 
       if (response.statusCode == 200) {
-        List newPosts = response.data["posts"];
+        List newPosts = response.data["posts"] ?? [];
 
         for (var p in newPosts) {
           p["isLiked"] ??= false;
+          if (p["reactions"] is! Map) {
+            final int likes = p["reactions"] is num
+                ? (p["reactions"] as num).toInt()
+                : 0;
+            p["reactions"] = {"likes": likes, "dislikes": 0};
+          } else {
+            p["reactions"]["likes"] ??= 0;
+            p["reactions"]["dislikes"] ??= 0;
+          }
         }
+
+        final int? totalPosts = response.data["total"] is int
+            ? response.data["total"] as int
+            : null;
 
         setState(() {
           posts.addAll(newPosts);
-          skip += limit;
-          hasMore = newPosts.length == limit;
+          skip += newPosts.length;
+          hasMore = totalPosts != null
+              ? posts.length < totalPosts
+              : newPosts.length == limit;
           isLoadingPosts = false;
           sortPostsByMeFirst();
         });
@@ -79,6 +122,27 @@ class _HomePageState extends State<HomePage> {
     } catch (e) {
       setState(() => isLoadingPosts = false);
     }
+  }
+
+  void onSearchChanged(String value) {
+    setState(() {});
+    _searchDebounce?.cancel();
+    _searchDebounce = Timer(const Duration(milliseconds: 450), () {
+      if (!mounted) return;
+      setState(() {
+        _searchQuery = value.trim();
+      });
+      loadPosts(isRefresh: true);
+    });
+  }
+
+  void clearSearch() {
+    _searchDebounce?.cancel();
+    _searchController.clear();
+    setState(() {
+      _searchQuery = '';
+    });
+    loadPosts(isRefresh: true);
   }
 
   Future<void> deletePost(int id, int index) async {
@@ -101,7 +165,7 @@ class _HomePageState extends State<HomePage> {
         _showSuccessSnackBar("Fess berhasil dihapus");
       }
     } catch (e) {
-      print(e);
+      debugPrint(e.toString());
       // Jika ada error network, tetap hapus dari lokal
       setState(() {
         posts.removeWhere((p) => p["id"] == id);
@@ -206,6 +270,74 @@ class _HomePageState extends State<HomePage> {
           ],
         ),
         actions: [
+          Padding(
+            padding: const EdgeInsets.only(right: 8),
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 180),
+              width: isSearchOpen ? 165 : 40,
+              height: 36,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(18),
+                border: Border.all(color: const Color(0xFFDFE0E0), width: 1),
+              ),
+              child: Row(
+                children: [
+                  GestureDetector(
+                    onTap: () {
+                      setState(() {
+                        if (isSearchOpen && _searchController.text.isEmpty) {
+                          isSearchOpen = false;
+                          _searchQuery = '';
+                          loadPosts(isRefresh: true);
+                        } else {
+                          isSearchOpen = true;
+                        }
+                      });
+                    },
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 9),
+                      child: SvgPicture.asset(
+                        "assets/icons/search.svg",
+                        width: 18,
+                        height: 18,
+                      ),
+                    ),
+                  ),
+                  if (isSearchOpen)
+                    Expanded(
+                      child: TextField(
+                        controller: _searchController,
+                        onChanged: onSearchChanged,
+                        style: const TextStyle(fontSize: 13),
+                        decoration: InputDecoration(
+                          hintText: 'Cari... ',
+                          hintStyle: const TextStyle(
+                            fontSize: 13,
+                            color: Colors.grey,
+                          ),
+                          border: InputBorder.none,
+                          isDense: true,
+                          contentPadding: const EdgeInsets.only(right: 4),
+                          suffixIcon: _searchController.text.isNotEmpty
+                              ? IconButton(
+                                  padding: EdgeInsets.zero,
+                                  constraints: const BoxConstraints(),
+                                  onPressed: clearSearch,
+                                  icon: const Icon(
+                                    Icons.close,
+                                    size: 14,
+                                    color: Colors.grey,
+                                  ),
+                                )
+                              : null,
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+            ),
+          ),
           Padding(
             padding: const EdgeInsets.only(right: 16),
             child: Image.asset(
@@ -353,7 +485,7 @@ class _HomePageState extends State<HomePage> {
                         ],
                       ),
                       const SizedBox(height: 10),
-                      Text(post["body"] ?? ""),
+                      Text(post["body"] ?? post["title"] ?? ""),
                       const SizedBox(height: 12),
                       Row(
                         children: [
@@ -385,12 +517,14 @@ class _HomePageState extends State<HomePage> {
         onTapDown: (_) => setState(() => isFabPressed = true),
         onTapUp: (_) async {
           await Future.delayed(const Duration(milliseconds: 100));
+          if (!context.mounted) return;
           setState(() => isFabPressed = false);
 
           final result = await Navigator.push(
             context,
             MaterialPageRoute(builder: (context) => const EditPostPage()),
           );
+          if (!context.mounted) return;
 
           //EDIT AGAR POST BARU LANGSUNG MUNCUL DI HOME PAGE TANPA HARUS RELOAD
           if (result != null && result is Map) {
