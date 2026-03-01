@@ -259,8 +259,8 @@ class _HomePageState extends State<HomePage> {
           Padding(
             padding: const EdgeInsets.only(right: 16),
             child: GestureDetector(
-              onTap: () {
-                Navigator.push(
+              onTap: () async {
+                await Navigator.push(
                   context,
                   MaterialPageRoute(builder: (_) => const ProfilePage()),
                 );
@@ -360,7 +360,7 @@ class _HomePageState extends State<HomePage> {
                                       }
                                       sortPostsByMeFirst();
                                     });
-                                    _showSuccessSnackBar("Fess telah diupdate");
+                                    _showSuccessSnackBar("SORA telah diupdate");
                                   }
                                 } else if (value == 'delete') {
                                   // Hapus menggunakan id, bukan index
@@ -379,7 +379,7 @@ class _HomePageState extends State<HomePage> {
                                       ),
                                       const SizedBox(width: 12),
                                       const Text(
-                                        "Edit Fess",
+                                        "Edit SORA",
                                         style: TextStyle(
                                           color: Color(0xFF131414),
                                         ),
@@ -398,7 +398,7 @@ class _HomePageState extends State<HomePage> {
                                       ),
                                       const SizedBox(width: 12),
                                       const Text(
-                                        "Hapus Fess",
+                                        "Hapus SORA",
                                         style: TextStyle(
                                           color: Color(0xFFEA3829),
                                         ),
@@ -468,7 +468,7 @@ class _HomePageState extends State<HomePage> {
               sortPostsByMeFirst();
             });
 
-            _showSuccessSnackBar("Fess telah terkirim");
+            _showSuccessSnackBar("SORA telah terkirim");
           }
         },
         onTapCancel: () => setState(() => isFabPressed = false),
