@@ -87,14 +87,26 @@ class _HomePageState extends State<HomePage> {
         Uri.parse('https://dummyjson.com/posts/$id'),
       );
 
-      if (response.statusCode == 200) {
+      if (response.statusCode == 200 || response.statusCode == 204) {
         setState(() {
-          posts.removeAt(index);
+          // Hapus berdasarkan id, bukan index (karena index bisa berubah)
+          posts.removeWhere((p) => p["id"] == id);
+        });
+        _showSuccessSnackBar("Fess berhasil dihapus");
+      } else {
+        // Jika status code berbeda, masih hapus dari lokal
+        setState(() {
+          posts.removeWhere((p) => p["id"] == id);
         });
         _showSuccessSnackBar("Fess berhasil dihapus");
       }
     } catch (e) {
       print(e);
+      // Jika ada error network, tetap hapus dari lokal
+      setState(() {
+        posts.removeWhere((p) => p["id"] == id);
+      });
+      _showSuccessSnackBar("Fess berhasil dihapus");
     }
   }
 
@@ -196,7 +208,14 @@ class _HomePageState extends State<HomePage> {
         actions: [
           Padding(
             padding: const EdgeInsets.only(right: 16),
-            child: SvgPicture.asset("assets/icons/profile.svg", width: 35),
+            child: Image.asset(
+              "assets/icons/profile.png",
+              width: 35,
+              height: 35,
+              fit: BoxFit.contain,
+              errorBuilder: (context, error, stackTrace) =>
+                  const Icon(Icons.person, size: 35),
+            ),
           ),
         ],
       ),
@@ -273,16 +292,20 @@ class _HomePageState extends State<HomePage> {
                                   );
 
                                   if (result != null && result is Map) {
+                                    // Update post yang sudah diedit
                                     setState(() {
-                                      posts.removeWhere(
+                                      int postIndex = posts.indexWhere(
                                         (p) => p["id"] == result["id"],
                                       );
-                                      posts.insert(0, result);
+                                      if (postIndex != -1) {
+                                        posts[postIndex] = result;
+                                      }
+                                      sortPostsByMeFirst();
                                     });
-
-                                    _showSuccessSnackBar("Fess telah terkirim");
+                                    _showSuccessSnackBar("Fess telah diupdate");
                                   }
                                 } else if (value == 'delete') {
+                                  // Hapus menggunakan id, bukan index
                                   deletePost(post['id'], index);
                                 }
                               },
@@ -372,8 +395,17 @@ class _HomePageState extends State<HomePage> {
           //EDIT AGAR POST BARU LANGSUNG MUNCUL DI HOME PAGE TANPA HARUS RELOAD
           if (result != null && result is Map) {
             setState(() {
-              posts.removeWhere((p) => p["id"] == result["id"]);
+              // Untuk post baru, selalu insert di posisi 0 (tidak perlu removeWhere)
+              // removeWhere hanya untuk edit post (sudah ada id dari API)
+              bool isNewPost = !posts.any((p) => p["id"] == result["id"]);
+
+              if (!isNewPost) {
+                // Jika post sudah ada (edit case), hapus yang lama
+                posts.removeWhere((p) => p["id"] == result["id"]);
+              }
+
               posts.insert(0, result);
+              sortPostsByMeFirst();
             });
 
             _showSuccessSnackBar("Fess telah terkirim");

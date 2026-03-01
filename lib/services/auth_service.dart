@@ -17,7 +17,7 @@ class AuthService {
     );
   }
 
-  // ================= LOGIN =================
+  //LOGIN
   static Future<Response> login(String username, String password) async {
     final response = await dio.post(
       'https://dummyjson.com/auth/login',
@@ -48,6 +48,12 @@ class AuthService {
     );
   }
 
+  // ================= GET SINGLE POST =================
+  static Future<Response> getPost(int postId) async {
+    return await dio.get('https://dummyjson.com/posts/$postId');
+  }
+
+  // ================= GET POST COMMENTS =================
   static Future<Response> getPostComments(int postId) async {
     return await dio.get('https://dummyjson.com/posts/$postId/comments');
   }

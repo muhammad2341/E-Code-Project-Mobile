@@ -20,6 +20,7 @@ class _DetailPageState extends State<DetailPage> {
   @override
   void initState() {
     super.initState();
+    loadPostDetail();
     loadComments();
   }
 
@@ -27,6 +28,28 @@ class _DetailPageState extends State<DetailPage> {
   void dispose() {
     _commentController.dispose();
     super.dispose();
+  }
+
+  Future<void> loadPostDetail() async {
+    try {
+      final response = await AuthService.getPost(widget.post["id"]);
+
+      if (response.statusCode == 200) {
+        Map postDetail = response.data;
+
+        // Gabungkan data baru dengan data lokal yang sudah ada
+        setState(() {
+          widget.post["body"] = postDetail["body"] ?? widget.post["body"];
+          widget.post["reactions"] =
+              postDetail["reactions"] ??
+              widget.post["reactions"] ??
+              {"likes": 0, "dislikes": 0};
+          widget.post["isLiked"] = widget.post["isLiked"] ?? false;
+        });
+      }
+    } catch (e) {
+      print("Error loading post detail: $e");
+    }
   }
 
   Future<void> loadComments() async {
@@ -114,11 +137,13 @@ class _DetailPageState extends State<DetailPage> {
         actions: [
           Padding(
             padding: const EdgeInsets.only(right: 16),
-            child: CircleAvatar(
-              radius: 18,
-              backgroundImage: const NetworkImage(
-                "https://robohash.org/user123",
-              ),
+            child: Image.asset(
+              "assets/icons/profile.png",
+              width: 35,
+              height: 35,
+              fit: BoxFit.contain,
+              errorBuilder: (context, error, stackTrace) =>
+                  const Icon(Icons.person, size: 35),
             ),
           ),
         ],
