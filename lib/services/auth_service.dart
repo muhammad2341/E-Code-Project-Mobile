@@ -52,17 +52,17 @@ class AuthService {
     return response;
   }
 
-  // ================= GET AUTH USER =================
+  //GET AUTH USER
   static Future<Response> getUser() async {
     return await dio.get('https://dummyjson.com/auth/me');
   }
 
-  // ================= GET AUTH USER (/user/me) =================
+  //GET AUTH USER (/user/me)
   static Future<Response> getAuthUserMe() async {
     return await dio.get('https://dummyjson.com/user/me');
   }
 
-  // ================= GET POSTS (PAGINATION) =================
+  //GET POSTS (PAGINATION)
   static Future<Response> getPosts({
     required int limit,
     required int skip,

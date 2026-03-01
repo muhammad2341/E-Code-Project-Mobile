@@ -140,6 +140,48 @@ class _LoginPageState extends State<LoginPage> {
                     onPressed: isLoading
                         ? null
                         : () async {
+                            // VALIDASI USERNAME
+                            if (usernameController.text.trim().isEmpty) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text("Username tidak boleh kosong"),
+                                ),
+                              );
+                              return;
+                            }
+
+                            // VALIDASI PASSWORD
+                            if (passwordController.text.isEmpty) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text("Password tidak boleh kosong"),
+                                ),
+                              );
+                              return;
+                            }
+
+                            // VALIDASI USERNAME MIN 3 KARAKTER
+                            if (usernameController.text.length < 3) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text(
+                                      "Username minimal 3 karakter"),
+                                ),
+                              );
+                              return;
+                            }
+
+                            // VALIDASI PASSWORD MIN 6 KARAKTER
+                            if (passwordController.text.length < 6) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text(
+                                      "Password minimal 6 karakter"),
+                                ),
+                              );
+                              return;
+                            }
+
                             setState(() => isLoading = true);
 
                             try {

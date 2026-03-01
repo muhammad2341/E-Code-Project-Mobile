@@ -57,7 +57,7 @@ class _EditPostPageState extends State<EditPostPage> {
   }
 
   Future<void> submitPost() async {
-      // Validasi: Field kosong
+    // Validasi: Field kosong
     if (_controller.text.trim().isEmpty) {
       _showCustomSnackBar(
         context,
