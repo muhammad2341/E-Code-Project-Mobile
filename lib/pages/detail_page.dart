@@ -108,7 +108,7 @@ class _DetailPageState extends State<DetailPage> {
       comments.insert(0, {
         "id": DateTime.now().millisecondsSinceEpoch,
         "body": _commentController.text,
-        "user": {"username": "SORA"},
+        "user": {"username": "Anonim"},
         "isLiked": false,
         "likes": 0,
       });
@@ -209,7 +209,7 @@ class _DetailPageState extends State<DetailPage> {
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             color: Colors.white,
             child: const Text(
-              "Balasan SORA",
+              "Balasan E-Coders",
               style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
             ),
           ),
@@ -252,7 +252,7 @@ class _DetailPageState extends State<DetailPage> {
                                 ),
                                 const SizedBox(width: 10),
                                 Text(
-                                  comment["user"]["username"] ?? "SORA",
+                                  comment["user"]["username"] ?? "Anonim",
                                   style: const TextStyle(
                                     fontWeight: FontWeight.w600,
                                   ),

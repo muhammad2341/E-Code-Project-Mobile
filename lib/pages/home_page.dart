@@ -360,7 +360,7 @@ class _HomePageState extends State<HomePage> {
                                       }
                                       sortPostsByMeFirst();
                                     });
-                                    _showSuccessSnackBar("SORA telah diupdate");
+                                    _showSuccessSnackBar("Fess telah diupdate");
                                   }
                                 } else if (value == 'delete') {
                                   // Hapus menggunakan id, bukan index
@@ -379,7 +379,7 @@ class _HomePageState extends State<HomePage> {
                                       ),
                                       const SizedBox(width: 12),
                                       const Text(
-                                        "Edit SORA",
+                                        "Edit Fess",
                                         style: TextStyle(
                                           color: Color(0xFF131414),
                                         ),
@@ -398,7 +398,7 @@ class _HomePageState extends State<HomePage> {
                                       ),
                                       const SizedBox(width: 12),
                                       const Text(
-                                        "Hapus SORA",
+                                        "Hapus Fess",
                                         style: TextStyle(
                                           color: Color(0xFFEA3829),
                                         ),
@@ -468,7 +468,7 @@ class _HomePageState extends State<HomePage> {
               sortPostsByMeFirst();
             });
 
-            _showSuccessSnackBar("SORA telah terkirim");
+            _showSuccessSnackBar("Fess telah terkirim");
           }
         },
         onTapCancel: () => setState(() => isFabPressed = false),

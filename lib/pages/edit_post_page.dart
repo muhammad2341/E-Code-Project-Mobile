@@ -61,7 +61,7 @@ class _EditPostPageState extends State<EditPostPage> {
     if (_controller.text.trim().isEmpty) {
       _showCustomSnackBar(
         context,
-        "SORA tidak boleh kosong",
+        "Fess tidak boleh kosong",
         "assets/icons/fesskosongicon.svg",
         const Color(0xFFFDE7D3),
         const Color(0xFFFAB67C),
@@ -162,7 +162,7 @@ class _EditPostPageState extends State<EditPostPage> {
         } catch (e) {
           _showCustomSnackBar(
             context,
-            "Gagal mengirim SORA!",
+            "Gagal mengirim Fess!",
             "assets/icons/fessinterneticon.svg",
             const Color(0xFFFBD7D4),
             const Color(0xFFF2887F),

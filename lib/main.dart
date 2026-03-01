@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'pages/login_page.dart';
 import 'services/auth_service.dart';
 
@@ -13,9 +14,10 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(
+    return MaterialApp(
       debugShowCheckedModeBanner: false,
-      home: LoginPage(),
+      theme: ThemeData(fontFamily: GoogleFonts.sora().fontFamily),
+      home: const LoginPage(),
     );
   }
 }
