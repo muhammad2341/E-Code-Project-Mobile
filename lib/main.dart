@@ -4,7 +4,7 @@ import 'services/auth_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  AuthService.init();
+  await AuthService.init();
   runApp(const MyApp());
 }
 

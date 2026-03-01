@@ -159,7 +159,11 @@ class _SearchPageState extends State<SearchPage> {
         backgroundColor: Colors.white,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Color(0xFF5F6265)),
+          icon: SvgPicture.asset(
+            'assets/icons/kembali.svg',
+            width: 22,
+            height: 22,
+          ),
           onPressed: () => Navigator.pop(context),
         ),
         title: const Text(
