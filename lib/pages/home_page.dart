@@ -3,6 +3,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'edit_post_page.dart';
 import '../services/auth_service.dart';
 import 'detail_page.dart';
+import 'profile_page.dart';
 import 'search_page.dart';
 import 'package:http/http.dart' as http;
 
@@ -257,13 +258,21 @@ class _HomePageState extends State<HomePage> {
           ),
           Padding(
             padding: const EdgeInsets.only(right: 16),
-            child: Image.asset(
-              "assets/icons/profile.png",
-              width: 35,
-              height: 35,
-              fit: BoxFit.contain,
-              errorBuilder: (context, error, stackTrace) =>
-                  const Icon(Icons.person, size: 35),
+            child: GestureDetector(
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const ProfilePage()),
+                );
+              },
+              child: Image.asset(
+                "assets/icons/profile.png",
+                width: 35,
+                height: 35,
+                fit: BoxFit.contain,
+                errorBuilder: (context, error, stackTrace) =>
+                    const Icon(Icons.person, size: 35),
+              ),
             ),
           ),
         ],
