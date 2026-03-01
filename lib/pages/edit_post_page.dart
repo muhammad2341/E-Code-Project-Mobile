@@ -240,7 +240,11 @@ class _EditPostPageState extends State<EditPostPage> {
       backgroundColor: const Color(0xFFF5F6F8),
       appBar: AppBar(
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.black),
+          icon: SvgPicture.asset(
+            "assets/icons/kembali.svg",
+            width: 22,
+            height: 22,
+          ),
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(

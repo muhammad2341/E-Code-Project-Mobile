@@ -3,6 +3,8 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'edit_post_page.dart';
 import '../services/auth_service.dart';
 import 'detail_page.dart';
+import 'profile_page.dart';
+import 'search_page.dart';
 import 'package:http/http.dart' as http;
 
 class HomePage extends StatefulWidget {
@@ -37,6 +39,12 @@ class _HomePageState extends State<HomePage> {
     });
   }
 
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
   void sortPostsByMeFirst() {
     posts.sort((a, b) {
       if (a["userId"] == 5 && b["userId"] != 5) return -1;
@@ -60,16 +68,31 @@ class _HomePageState extends State<HomePage> {
       final response = await AuthService.getPosts(limit: limit, skip: skip);
 
       if (response.statusCode == 200) {
-        List newPosts = response.data["posts"];
+        List newPosts = response.data["posts"] ?? [];
 
         for (var p in newPosts) {
           p["isLiked"] ??= false;
+          if (p["reactions"] is! Map) {
+            final int likes = p["reactions"] is num
+                ? (p["reactions"] as num).toInt()
+                : 0;
+            p["reactions"] = {"likes": likes, "dislikes": 0};
+          } else {
+            p["reactions"]["likes"] ??= 0;
+            p["reactions"]["dislikes"] ??= 0;
+          }
         }
+
+        final int? totalPosts = response.data["total"] is int
+            ? response.data["total"] as int
+            : null;
 
         setState(() {
           posts.addAll(newPosts);
-          skip += limit;
-          hasMore = newPosts.length == limit;
+          skip += newPosts.length;
+          hasMore = totalPosts != null
+              ? posts.length < totalPosts
+              : newPosts.length == limit;
           isLoadingPosts = false;
           sortPostsByMeFirst();
         });
@@ -101,7 +124,7 @@ class _HomePageState extends State<HomePage> {
         _showSuccessSnackBar("Fess berhasil dihapus");
       }
     } catch (e) {
-      print(e);
+      debugPrint(e.toString());
       // Jika ada error network, tetap hapus dari lokal
       setState(() {
         posts.removeWhere((p) => p["id"] == id);
@@ -207,14 +230,49 @@ class _HomePageState extends State<HomePage> {
         ),
         actions: [
           Padding(
+            padding: const EdgeInsets.only(right: 8),
+            child: GestureDetector(
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const SearchPage()),
+                );
+              },
+              child: Container(
+                width: 40,
+                height: 36,
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(18),
+                  border: Border.all(color: const Color(0xFFDFE0E0), width: 1),
+                ),
+                child: Center(
+                  child: SvgPicture.asset(
+                    "assets/icons/search.svg",
+                    width: 18,
+                    height: 18,
+                  ),
+                ),
+              ),
+            ),
+          ),
+          Padding(
             padding: const EdgeInsets.only(right: 16),
-            child: Image.asset(
-              "assets/icons/profile.png",
-              width: 35,
-              height: 35,
-              fit: BoxFit.contain,
-              errorBuilder: (context, error, stackTrace) =>
-                  const Icon(Icons.person, size: 35),
+            child: GestureDetector(
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const ProfilePage()),
+                );
+              },
+              child: Image.asset(
+                "assets/icons/profile.png",
+                width: 35,
+                height: 35,
+                fit: BoxFit.contain,
+                errorBuilder: (context, error, stackTrace) =>
+                    const Icon(Icons.person, size: 35),
+              ),
             ),
           ),
         ],
@@ -353,7 +411,7 @@ class _HomePageState extends State<HomePage> {
                         ],
                       ),
                       const SizedBox(height: 10),
-                      Text(post["body"] ?? ""),
+                      Text(post["body"] ?? post["title"] ?? ""),
                       const SizedBox(height: 12),
                       Row(
                         children: [
@@ -385,12 +443,14 @@ class _HomePageState extends State<HomePage> {
         onTapDown: (_) => setState(() => isFabPressed = true),
         onTapUp: (_) async {
           await Future.delayed(const Duration(milliseconds: 100));
+          if (!context.mounted) return;
           setState(() => isFabPressed = false);
 
           final result = await Navigator.push(
             context,
             MaterialPageRoute(builder: (context) => const EditPostPage()),
           );
+          if (!context.mounted) return;
 
           //EDIT AGAR POST BARU LANGSUNG MUNCUL DI HOME PAGE TANPA HARUS RELOAD
           if (result != null && result is Map) {
