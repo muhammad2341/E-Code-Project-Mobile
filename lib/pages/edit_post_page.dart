@@ -18,8 +18,8 @@ class _EditPostPageState extends State<EditPostPage> {
   @override
   void initState() {
     super.initState();
-    if (widget.post != null) {
-      _controller.text = widget.post!["body"];
+    if (widget.post != null && widget.post!.containsKey("body")) {
+      _controller.text = widget.post!["body"] ?? "";
     }
     _controller.addListener(() {
       setState(() {}); // Update character count
@@ -78,22 +78,69 @@ class _EditPostPageState extends State<EditPostPage> {
                 .timeout(const Duration(seconds: 10));
 
       if (response.statusCode == 200 || response.statusCode == 201) {
-        final data = jsonDecode(response.body);
+        var data = jsonDecode(response.body);
 
-        if (isEdit) {
+        // Pastikan body selalu dari input user (controller), bukan dari response API
+        data["body"] = _controller.text;
+
+        if (isEdit && widget.post != null) {
           // Pertahankan data lama saat edit
           data["isLiked"] = widget.post!["isLiked"] ?? false;
           data["reactions"] =
               widget.post!["reactions"] ?? {"likes": 0, "dislikes": 0};
-          data["userId"] = widget.post!["userId"];
+          data["userId"] = widget.post!["userId"] ?? 5;
+          data["id"] = widget.post!["id"]; // Pastikan ID tetap sama
+          data["localDate"] =
+              widget.post!["localDate"] ??
+              DateTime.now(); // Pertahankan tanggal lokal
         } else {
           // Data default untuk post baru
           data["isLiked"] = false;
           data["reactions"] = {"likes": 0, "dislikes": 0};
           data["userId"] = 5;
+          data["localDate"] =
+              DateTime.now(); // Set tanggal lokal untuk post baru
         }
 
-        Navigator.pop(context, data);
+        // Tunggu sebentar sebelum menutup untuk menghindari race condition
+        await Future.delayed(const Duration(milliseconds: 300));
+        if (mounted) {
+          Navigator.pop(context, data);
+        }
+      } else {
+        // Jika status code tidak 200/201, coba parse response dan kembalikan data
+        try {
+          var data = jsonDecode(response.body);
+
+          // Pastikan body selalu dari input user
+          data["body"] = _controller.text;
+
+          if (isEdit && widget.post != null) {
+            data["isLiked"] = widget.post!["isLiked"] ?? false;
+            data["reactions"] =
+                widget.post!["reactions"] ?? {"likes": 0, "dislikes": 0};
+            data["userId"] = widget.post!["userId"] ?? 5;
+            data["id"] = widget.post!["id"];
+            data["localDate"] = widget.post!["localDate"] ?? DateTime.now();
+          } else {
+            data["isLiked"] = false;
+            data["reactions"] = {"likes": 0, "dislikes": 0};
+            data["userId"] = 5;
+            data["localDate"] = DateTime.now();
+          }
+          await Future.delayed(const Duration(milliseconds: 300));
+          if (mounted) {
+            Navigator.pop(context, data);
+          }
+        } catch (e) {
+          _showCustomSnackBar(
+            context,
+            "Gagal mengirim Fess!",
+            "assets/icons/fessinterneticon.svg",
+            const Color(0xFFFBD7D4),
+            const Color(0xFFF2887F),
+          );
+        }
       }
     } on http.ClientException {
       // No internet connection
