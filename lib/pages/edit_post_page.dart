@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import '../services/auth_service.dart';
 
 class EditPostPage extends StatefulWidget {
   final Map? post; // Jika null berarti Add Post, jika ada berarti Edit Post
@@ -14,6 +15,7 @@ class EditPostPage extends StatefulWidget {
 class _EditPostPageState extends State<EditPostPage> {
   final TextEditingController _controller = TextEditingController();
   bool isSubmitting = false;
+  int? _currentUserId;
 
   @override
   void initState() {
@@ -24,6 +26,28 @@ class _EditPostPageState extends State<EditPostPage> {
     _controller.addListener(() {
       setState(() {}); // Update character count
     });
+    _loadCurrentUserId();
+  }
+
+  Future<void> _loadCurrentUserId() async {
+    try {
+      final response = await AuthService.getAuthUserMe();
+      if (response.statusCode == 200 && response.data is Map) {
+        setState(() {
+          _currentUserId = response.data['id'] as int?;
+        });
+        return;
+      }
+    } catch (_) {}
+
+    try {
+      final response = await AuthService.getUser();
+      if (response.statusCode == 200 && response.data is Map) {
+        setState(() {
+          _currentUserId = response.data['id'] as int?;
+        });
+      }
+    } catch (_) {}
   }
 
   @override
@@ -33,11 +57,11 @@ class _EditPostPageState extends State<EditPostPage> {
   }
 
   Future<void> submitPost() async {
-    // Validasi: Field kosong
+      // Validasi: Field kosong
     if (_controller.text.trim().isEmpty) {
       _showCustomSnackBar(
         context,
-        "Fess tidak boleh kosong",
+        "SORA tidak boleh kosong",
         "assets/icons/fesskosongicon.svg",
         const Color(0xFFFDE7D3),
         const Color(0xFFFAB67C),
@@ -52,6 +76,9 @@ class _EditPostPageState extends State<EditPostPage> {
         ? 'https://dummyjson.com/posts/${widget.post!['id']}'
         : 'https://dummyjson.com/posts/add';
 
+    // Gunakan userId dari user yang login, fallback ke 5 jika tidak ada
+    final postUserId = _currentUserId ?? widget.post?['userId'] ?? 5;
+
     try {
       final response = isEdit
           ? await http
@@ -61,7 +88,7 @@ class _EditPostPageState extends State<EditPostPage> {
                   body: jsonEncode({
                     'title': widget.post!['title'] ?? 'User Post',
                     'body': _controller.text,
-                    'userId': widget.post!['userId'] ?? 5,
+                    'userId': widget.post!['userId'] ?? postUserId,
                   }),
                 )
                 .timeout(const Duration(seconds: 10))
@@ -72,7 +99,7 @@ class _EditPostPageState extends State<EditPostPage> {
                   body: jsonEncode({
                     'title': 'User Post',
                     'body': _controller.text,
-                    'userId': 5,
+                    'userId': postUserId,
                   }),
                 )
                 .timeout(const Duration(seconds: 10));
@@ -97,7 +124,7 @@ class _EditPostPageState extends State<EditPostPage> {
           // Data default untuk post baru
           data["isLiked"] = false;
           data["reactions"] = {"likes": 0, "dislikes": 0};
-          data["userId"] = 5;
+          data["userId"] = postUserId; // Gunakan userId yang benar
           data["localDate"] =
               DateTime.now(); // Set tanggal lokal untuk post baru
         }
@@ -125,7 +152,7 @@ class _EditPostPageState extends State<EditPostPage> {
           } else {
             data["isLiked"] = false;
             data["reactions"] = {"likes": 0, "dislikes": 0};
-            data["userId"] = 5;
+            data["userId"] = postUserId; // Gunakan userId yang benar
             data["localDate"] = DateTime.now();
           }
           await Future.delayed(const Duration(milliseconds: 300));
@@ -135,7 +162,7 @@ class _EditPostPageState extends State<EditPostPage> {
         } catch (e) {
           _showCustomSnackBar(
             context,
-            "Gagal mengirim Fess!",
+            "Gagal mengirim SORA!",
             "assets/icons/fessinterneticon.svg",
             const Color(0xFFFBD7D4),
             const Color(0xFFF2887F),

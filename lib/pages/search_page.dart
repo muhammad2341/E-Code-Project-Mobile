@@ -167,7 +167,7 @@ class _SearchPageState extends State<SearchPage> {
           onPressed: () => Navigator.pop(context),
         ),
         title: const Text(
-          '// Cari Fess',
+          '// Cari SORA',
           style: TextStyle(
             color: Color(0xFF131414),
             fontWeight: FontWeight.w700,

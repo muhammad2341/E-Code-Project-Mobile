@@ -286,7 +286,7 @@ class _ProfilePageState extends State<ProfilePage> {
                     const Divider(height: 1),
                     const SizedBox(height: 14),
                     const Text(
-                      'Fess yang kamu kirim',
+                      'SORA yang kamu kirim',
                       style: TextStyle(
                         fontSize: 26 / 2,
                         fontWeight: FontWeight.w700,
@@ -333,7 +333,7 @@ class _ProfilePageState extends State<ProfilePage> {
                               ),
                               const SizedBox(width: 8),
                               const Text(
-                                'Anonim',
+                                'SORA',
                                 style: TextStyle(
                                   color: Color(0xFF131414),
                                   fontWeight: FontWeight.w700,
